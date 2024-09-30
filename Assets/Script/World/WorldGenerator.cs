@@ -6,6 +6,12 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class WorldGenerator : MonoBehaviour
 {
+    public static WorldGenerator Instance { get; private set; }
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     public WorldBiom worldBiom;
     public Vector3Int chunkSizes;
     public Transform ChunkParent;
@@ -20,8 +26,10 @@ public class WorldGenerator : MonoBehaviour
     private int[,,] chunkObjectParts;
     private int lastChunkId;
     private Vector2 chunkPositionOffset;
+    private Vector3 lastChunkPosition = Vector3.zero;
+    private Vector3 lastPlayerPosition = Vector3.zero;
 
-    
+    private int chunkToPlayer = 10;
 
     private Mesh GetGroundMesh(WorldBiom biom, Vector3 positionOffset)
     {
@@ -248,7 +256,25 @@ public class WorldGenerator : MonoBehaviour
         return chunk;
     }
 
-    // Start is called before the first frame update
+    public void CheckNewPlayerPosition(Vector3 position)
+    {
+        lastPlayerPosition = position;
+        if (Vector3.Distance(lastPlayerPosition, lastChunkPosition) < chunkSizes.x * chunkToPlayer)
+        {
+            GenerateNextChunk();
+            var lastChunk = ChunkParent.GetChild(0);
+            if (Vector3.Distance(lastPlayerPosition, lastChunk.position) > chunkSizes.x * chunkToPlayer)
+                Destroy(lastChunk.gameObject);
+        }
+    }
+
+    private void GenerateNextChunk()
+    {
+        lastChunkPosition.z += chunkSizes.x;
+        CreateChunk(worldBiom, lastChunkPosition);
+        chunkPositionOffset.y += chunkSizes.x;
+    }
+
     void Start()
     {
         //while (ChunkParent.childCount > 0)
@@ -267,10 +293,11 @@ public class WorldGenerator : MonoBehaviour
 
         chunkGroundHeight = new float[chunkSizes.x, chunkSizes.z];
 
+        lastChunkPosition = new Vector3(0, 0, -chunkSizes.x);
         //CreateChunk(worldBiom);
     }
 
-    // Update is called once per frame
+
     void Update()
     {
         if (generate)
@@ -279,7 +306,6 @@ public class WorldGenerator : MonoBehaviour
             for(int i=0;i<ChunkParent.childCount;i++)
             {
                 var c = ChunkParent.GetChild(i);
-                Debug.Log(c);
                 if (Application.platform == RuntimePlatform.WindowsEditor && !Application.isPlaying)
                 {
                     DestroyImmediate(c.gameObject);
@@ -291,12 +317,10 @@ public class WorldGenerator : MonoBehaviour
 
             chunkPositionOffset = new Vector2(Random.value, Random.value) * 100;
             chunkGroundHeight = new float[chunkSizes.x, chunkSizes.z];
-            Vector3 position = Vector3.zero;
+            lastChunkPosition = new Vector3(0, 0, -chunkSizes.x);
             for (int i = 0; i < 10; i++)
             {
-                CreateChunk(worldBiom, position);
-                chunkPositionOffset.y += chunkSizes.x;
-                position.z += chunkSizes.x;
+                GenerateNextChunk();
             }
         }
         if (deleteChunks)
