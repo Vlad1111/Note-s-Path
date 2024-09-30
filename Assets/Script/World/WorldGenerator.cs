@@ -21,7 +21,9 @@ public class WorldGenerator : MonoBehaviour
     private int lastChunkId;
     private Vector2 chunkPositionOffset;
 
-    private Mesh GetGroundMesh(WorldBiom biom)
+    
+
+    private Mesh GetGroundMesh(WorldBiom biom, Vector3 positionOffset)
     {
         var myMesh = new MyMeshData();
 
@@ -29,7 +31,7 @@ public class WorldGenerator : MonoBehaviour
         List<int> triangles = new List<int>();
         List<MyVector2> uv = new List<MyVector2>();
         List<MyVector3> normals = new List<MyVector3>();
-        for (int i = 0; i < chunkSizes.x; i++)
+        for (int i = 0; i <= chunkSizes.x; i++)
         {
             for (int j = 0; j < chunkSizes.z; j++)
             {
@@ -37,12 +39,13 @@ public class WorldGenerator : MonoBehaviour
                 float jj = (float)j / (chunkSizes.z - 1);
 
                 float height = biom.groundHeight.Evaluate(jj);
-                height += Mathf.PerlinNoise(ii * 10 + chunkPositionOffset.x, jj * 10 + chunkPositionOffset.y) * biom.groundHeightVariation.Evaluate(jj);
+                height += Mathf.PerlinNoise(ii * 10 + chunkPositionOffset.x + positionOffset.z, jj * 10 + chunkPositionOffset.y + positionOffset.x) * biom.groundHeightVariation.Evaluate(jj);
                 height = Mathf.Max(biom.minGroundHeight.Evaluate(jj), height);
-                chunkGroundHeight[i, j] = height;
+                if(i != chunkSizes.x)
+                    chunkGroundHeight[i, j] = height;
 
                 height *= chunkSizes.y;
-                vertices.Add(new MyVector3(i, height, j));
+                vertices.Add(new MyVector3(j, height, i));
                 uv.Add(new MyVector2(jj, ii));
                 normals.Add(Vector3.up);
 
@@ -51,12 +54,12 @@ public class WorldGenerator : MonoBehaviour
                 if (i != 0 && j != 0)
                 {
                     triangles.Add(pos);
-                    triangles.Add(pos - 1);
                     triangles.Add(pos - chunkSizes.z - 1);
+                    triangles.Add(pos - 1);
 
                     triangles.Add(pos);
-                    triangles.Add(pos - chunkSizes.z - 1);
                     triangles.Add(pos - chunkSizes.z);
+                    triangles.Add(pos - chunkSizes.z - 1);
                 }
             }
         }
@@ -75,14 +78,17 @@ public class WorldGenerator : MonoBehaviour
     {
         var ground = new GameObject("ground").transform;
         ground.parent = chunk;
+        ground.localPosition = Vector3.zero;
 
         var meshRenderer = ground.gameObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = chunkGroundMaterial;
         var meshFilter = ground.gameObject.AddComponent<MeshFilter>();
-        meshFilter.mesh = GetGroundMesh(biom);
+        meshFilter.mesh = GetGroundMesh(biom, chunk.localPosition);
+        ground.gameObject.AddComponent<MeshCollider>().sharedMesh = meshFilter.sharedMesh;
 
         var water = new GameObject("water").transform;
         water.parent = chunk;
+        water.localPosition = Vector3.zero;
         meshRenderer = water.gameObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = chunkWaterMaterial;
         meshFilter = water.gameObject.AddComponent<MeshFilter>();
@@ -91,9 +97,9 @@ public class WorldGenerator : MonoBehaviour
             vertices = new[]
             {
                 new MyVector3(0, 0, 0),
-                new MyVector3(chunkSizes.x, 0, 0),
-                new MyVector3(chunkSizes.x, 0, chunkSizes.z),
-                new MyVector3(0, 0, chunkSizes.z),
+                new MyVector3(chunkSizes.z, 0, 0),
+                new MyVector3(chunkSizes.z, 0, chunkSizes.x),
+                new MyVector3(0, 0, chunkSizes.x),
             },
             triangles = new[]
             {
@@ -186,11 +192,11 @@ public class WorldGenerator : MonoBehaviour
         obj.slicesUntillCanCreate = Random.Range(obj.minSlicesUntillNext, obj.maxSlicesUntillNext);
 
         var newObj = InstantiateWorldObject(obj.biomObject, objP);
-        var pos = new Vector3(0, Random.Range(obj.minPosition.y, obj.maxPosition.y), Random.Range(obj.minPosition.x, obj.maxPosition.x));
-        pos.x = sliceIndex;
+        var pos = new Vector3(Random.Range(obj.minPosition.x, obj.maxPosition.x), Random.Range(obj.minPosition.y, obj.maxPosition.y), 0);
+        pos.z = sliceIndex;
         pos.y *= chunkSizes.y;
-        pos.z *= chunkSizes.z;
-        pos.y = Mathf.Max(pos.y, chunkGroundHeight[sliceIndex, (int)pos.z] * chunkSizes.y);
+        pos.x *= chunkSizes.z;
+        pos.y = Mathf.Max(pos.y, chunkGroundHeight[sliceIndex, (int)pos.x] * chunkSizes.y);
         newObj.transform.localPosition = pos;
         if (obj.flipXAxes)
             newObj.transform.localScale = new Vector3(-newObj.transform.localScale.x,
@@ -204,6 +210,7 @@ public class WorldGenerator : MonoBehaviour
     {
         var objectsP = new GameObject("objects").transform;
         objectsP.parent = chunk;
+        objectsP.localPosition = Vector3.zero;
 
         foreach (var obj in biom.biomObjects)
             obj.slicesUntillCanCreate = -1;
@@ -229,20 +236,32 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
-    private Transform CreateChunk(WorldBiom biom)
+    private Transform CreateChunk(WorldBiom biom, Vector3 positionOffset)
     {
-        var chunk = new GameObject("chunk").transform;
+        var chunk = new GameObject("chunk " + lastChunkId++).transform;
         chunk.parent = ChunkParent;
 
         CreateGround(biom, chunk);
         CreateWorldObjects(biom, chunk);
 
+        chunk.localPosition = positionOffset;
         return chunk;
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        //while (ChunkParent.childCount > 0)
+        //{
+        //    var c = ChunkParent.GetChild(0);
+        //    Debug.Log(c);
+        //    if (Application.platform == RuntimePlatform.WindowsEditor && !Application.isPlaying)
+        //        DestroyImmediate(c.gameObject);
+        //    else
+        //        Destroy(c.gameObject);
+        //}
+        generate = true;
+
         chunkObjectParts = new int[chunkSizes.x, chunkSizes.y, chunkSizes.z];
         lastChunkId = 0;
 
@@ -257,16 +276,28 @@ public class WorldGenerator : MonoBehaviour
         if (generate)
         {
             generate = false;
-            foreach (Transform c in ChunkParent)
-                if (Application.platform == RuntimePlatform.WindowsEditor)
+            for(int i=0;i<ChunkParent.childCount;i++)
+            {
+                var c = ChunkParent.GetChild(i);
+                Debug.Log(c);
+                if (Application.platform == RuntimePlatform.WindowsEditor && !Application.isPlaying)
+                {
                     DestroyImmediate(c.gameObject);
+                    i--;
+                }
                 else
                     Destroy(c.gameObject);
+            }
 
             chunkPositionOffset = new Vector2(Random.value, Random.value) * 100;
             chunkGroundHeight = new float[chunkSizes.x, chunkSizes.z];
-
-            CreateChunk(worldBiom);
+            Vector3 position = Vector3.zero;
+            for (int i = 0; i < 10; i++)
+            {
+                CreateChunk(worldBiom, position);
+                chunkPositionOffset.y += chunkSizes.x;
+                position.z += chunkSizes.x;
+            }
         }
         if (deleteChunks)
         {
@@ -278,4 +309,5 @@ public class WorldGenerator : MonoBehaviour
                     Destroy(c.gameObject);
         }
     }
+
 }

@@ -4,15 +4,25 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public NoteBehaviour note;
+
+    private Vector2 movement = Vector2.zero;
+    private bool flap = false;
+
+    private void Start()
     {
-        
     }
 
-    // Update is called once per frame
+    private void CalculateMovement()
+    {
+        movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        flap = Input.GetAxis("Jump") > 0.1f;
+    }
     void Update()
     {
-        
+        CalculateMovement();
+        note.SetMovement(movement.x, movement.y);
+        if (flap)
+            note.Flap();
     }
 }

@@ -226,17 +226,17 @@ MonoBehaviour:
     maxPosition: {x: 0.7, y: 0}
     flipXAxes: 0
     minSlicesUntillNext: 1
-    maxSlicesUntillNext: 10
-    slicesUntillCanCreate: 2
+    maxSlicesUntillNext: 60
+    slicesUntillCanCreate: 29
     probabilityPerSlice: 0.2
   - biomObject: {fileID: 7165267133470108280, guid: ab66664fc68e12341b249f7924fa6656,
       type: 3}
     minPosition: {x: 0.2, y: 0}
     maxPosition: {x: 0.3, y: 0}
     flipXAxes: 0
-    minSlicesUntillNext: 1
-    maxSlicesUntillNext: 3
-    slicesUntillCanCreate: 1
+    minSlicesUntillNext: 5
+    maxSlicesUntillNext: 20
+    slicesUntillCanCreate: 3
     probabilityPerSlice: 1
   - biomObject: {fileID: 7165267133470108280, guid: ab66664fc68e12341b249f7924fa6656,
       type: 3}
@@ -254,7 +254,7 @@ MonoBehaviour:
     flipXAxes: 0
     minSlicesUntillNext: 1
     maxSlicesUntillNext: 3
-    slicesUntillCanCreate: 0
+    slicesUntillCanCreate: 1
     probabilityPerSlice: 0.2
   - biomObject: {fileID: 8616085379087817658, guid: eb35558ccedc14b4b8103463deb1a167,
       type: 3}
@@ -263,5 +263,5 @@ MonoBehaviour:
     flipXAxes: 0
     minSlicesUntillNext: 1
     maxSlicesUntillNext: 5
-    slicesUntillCanCreate: 0
+    slicesUntillCanCreate: 3
     probabilityPerSlice: 5
