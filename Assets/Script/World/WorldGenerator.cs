@@ -29,7 +29,13 @@ public class WorldGenerator : MonoBehaviour
     private Vector3 lastChunkPosition = Vector3.zero;
     private Vector3 lastPlayerPosition = Vector3.zero;
 
-    private int chunkToPlayer = 10;
+    [SerializeField]
+    private int chunkToPlayer = 3;
+
+    public float GetTerrainMaxHeight()
+    {
+        return chunkSizes.y;
+    }
 
     private Mesh GetGroundMesh(WorldBiom biom, Vector3 positionOffset)
     {
@@ -47,7 +53,7 @@ public class WorldGenerator : MonoBehaviour
                 float jj = (float)j / (chunkSizes.z - 1);
 
                 float height = biom.groundHeight.Evaluate(jj);
-                height += Mathf.PerlinNoise(ii * 10 + chunkPositionOffset.x + positionOffset.z, jj * 10 + chunkPositionOffset.y + positionOffset.x) * biom.groundHeightVariation.Evaluate(jj);
+                height += Mathf.PerlinNoise((j + chunkPositionOffset.x + positionOffset.x) / 10, (i + chunkPositionOffset.y + positionOffset.z) / 10) * biom.groundHeightVariation.Evaluate(jj);
                 height = Mathf.Max(biom.minGroundHeight.Evaluate(jj), height);
                 if(i != chunkSizes.x)
                     chunkGroundHeight[i, j] = height;
@@ -92,7 +98,9 @@ public class WorldGenerator : MonoBehaviour
         meshRenderer.sharedMaterial = chunkGroundMaterial;
         var meshFilter = ground.gameObject.AddComponent<MeshFilter>();
         meshFilter.mesh = GetGroundMesh(biom, chunk.localPosition);
-        ground.gameObject.AddComponent<MeshCollider>().sharedMesh = meshFilter.sharedMesh;
+        var col = ground.gameObject.AddComponent<MeshCollider>();
+        col.sharedMesh = meshFilter.sharedMesh;
+        col.contactOffset = 0.1f;
 
         var water = new GameObject("water").transform;
         water.parent = chunk;
@@ -248,11 +256,11 @@ public class WorldGenerator : MonoBehaviour
     {
         var chunk = new GameObject("chunk " + lastChunkId++).transform;
         chunk.parent = ChunkParent;
+        chunk.localPosition = positionOffset;
 
         CreateGround(biom, chunk);
         CreateWorldObjects(biom, chunk);
 
-        chunk.localPosition = positionOffset;
         return chunk;
     }
 
@@ -263,7 +271,7 @@ public class WorldGenerator : MonoBehaviour
         {
             GenerateNextChunk();
             var lastChunk = ChunkParent.GetChild(0);
-            if (Vector3.Distance(lastPlayerPosition, lastChunk.position) > chunkSizes.x * chunkToPlayer)
+            if (Vector3.Distance(lastPlayerPosition, lastChunk.position) > chunkSizes.x * chunkToPlayer / 3)
                 Destroy(lastChunk.gameObject);
         }
     }
@@ -272,7 +280,6 @@ public class WorldGenerator : MonoBehaviour
     {
         lastChunkPosition.z += chunkSizes.x;
         CreateChunk(worldBiom, lastChunkPosition);
-        chunkPositionOffset.y += chunkSizes.x;
     }
 
     void Start()
@@ -318,7 +325,7 @@ public class WorldGenerator : MonoBehaviour
             chunkPositionOffset = new Vector2(Random.value, Random.value) * 100;
             chunkGroundHeight = new float[chunkSizes.x, chunkSizes.z];
             lastChunkPosition = new Vector3(0, 0, -chunkSizes.x);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < chunkToPlayer; i++)
             {
                 GenerateNextChunk();
             }

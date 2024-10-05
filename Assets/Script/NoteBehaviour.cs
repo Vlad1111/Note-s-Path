@@ -6,6 +6,7 @@ using UnityEngine;
 public class NoteBehaviour : MonoBehaviour
 {
     public Rigidbody rb;
+    public ParticleSystem flapParticleSystem;
     public float flappingTime;
     public float flappingPower;
     public float rotationSpeed;
@@ -31,6 +32,8 @@ public class NoteBehaviour : MonoBehaviour
     internal void Flap()
     {
         isFlappingTime = flappingTime;
+        rb.velocity += transform.forward * flappingPower * 5f;
+        flapParticleSystem.Play();
     }
 
 
@@ -48,6 +51,8 @@ public class NoteBehaviour : MonoBehaviour
             velocity.z += flappingPower;
             isFlappingTime -= Time.fixedDeltaTime;
         }
+        else if(flapParticleSystem.isPlaying)
+            flapParticleSystem.Stop();
 
         velocity.x -= velocity.x * airResistanceAxis.x;
         velocity.y -= velocity.y * airResistanceAxis.y;
@@ -63,8 +68,25 @@ public class NoteBehaviour : MonoBehaviour
 
     private void Update()
     {
-        transform.localEulerAngles += new Vector3(movement.y, 0, 0) * rotationSpeed * Time.deltaTime;
+        transform.localEulerAngles += new Vector3(movement.y * rotationSpeed * Time.deltaTime, 0, 0);
         transform.position += transform.right * movement.x * sizeMovementSpeed * Time.deltaTime;
-        //transform.localEulerAngles += new Vector3()
+
+        var teraingHeight = WorldGenerator.Instance.GetTerrainMaxHeight();
+        teraingHeight = 1 - transform.localPosition.y * 1.3f / teraingHeight;
+        if (teraingHeight < 0)
+        {
+            teraingHeight *= -5f;
+            if (teraingHeight > 1)
+                teraingHeight = teraingHeight * teraingHeight * 10;
+            float angle = transform.localEulerAngles.x;
+            if (angle > 180)
+                angle -= 360;
+            if (movement.y > 0)
+                teraingHeight -= movement.y;
+            if (angle < 0)
+            {
+                transform.localEulerAngles = new Vector3(angle + teraingHeight * Time.deltaTime * rotationSpeed, transform.localEulerAngles.y, transform.localEulerAngles.z);
+            }
+        }
     }
 }

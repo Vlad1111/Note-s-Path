@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public NoteBehaviour note;
+    public Transform cameraPivot;
 
     private Vector2 movement = Vector2.zero;
     private bool flap = false;
@@ -72,5 +73,8 @@ public class PlayerController : MonoBehaviour
         if (flap)
             note.Flap();
         WorldGenerator.Instance.CheckNewPlayerPosition(transform.position);
+
+        var rot = Quaternion.Lerp(Quaternion.identity, Quaternion.Inverse(transform.localRotation), 0.5f);
+        cameraPivot.localEulerAngles = new Vector3(rot.eulerAngles.x, 0, 0);
     }
 }

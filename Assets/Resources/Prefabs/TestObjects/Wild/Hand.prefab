@@ -93,6 +93,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3176330003225841753}
+  - component: {fileID: 7577042989010902369}
   m_Layer: 0
   m_Name: Cristal
   m_TagString: Untagged
@@ -116,6 +117,29 @@ Transform:
   - {fileID: 4646802838530040065}
   m_Father: {fileID: 3812838419444774546}
   m_LocalEulerAnglesHint: {x: -4.556, y: 0, z: 0}
+--- !u!136 &7577042989010902369
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2315246326304266215}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.65588355
+  m_Height: 1.28
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.0133879455, z: 0.016946146}
 --- !u!1 &3155951264634472177
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,7 +289,6 @@ GameObject:
   - component: {fileID: 4646802838530040065}
   - component: {fileID: 3034761467066484644}
   - component: {fileID: 1172135745761229920}
-  - component: {fileID: 7341946179006417305}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -338,27 +361,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &7341946179006417305
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3492884712338922020}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3880629999260937995
 GameObject:
   m_ObjectHideFlags: 0
