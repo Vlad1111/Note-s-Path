@@ -170,17 +170,17 @@ MonoBehaviour:
       type: 3}
     minPosition: {x: 0.7, y: 0}
     maxPosition: {x: 0.7, y: 0}
-    flipXAxes: 0
+    flipXAxes: 1
     minSlicesUntillNext: 60
     maxSlicesUntillNext: 60
-    slicesUntillCanCreate: 1
+    slicesUntillCanCreate: 2
     probabilityPerSlice: 0.9
   - biomObject: {fileID: 8001850518627132819, guid: 1e48b1ba8ed7194489312bc3c8757608,
       type: 3}
     minPosition: {x: 0.3, y: 0}
     maxPosition: {x: 0.3, y: 0}
-    flipXAxes: 1
+    flipXAxes: 0
     minSlicesUntillNext: 60
     maxSlicesUntillNext: 60
-    slicesUntillCanCreate: 1
+    slicesUntillCanCreate: 2
     probabilityPerSlice: 0.9

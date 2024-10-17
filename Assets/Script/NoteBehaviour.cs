@@ -20,7 +20,6 @@ public class NoteBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Flap();
     }
 
     public void SetMovement(float x, float y)
@@ -32,7 +31,7 @@ public class NoteBehaviour : MonoBehaviour
     internal void Flap()
     {
         isFlappingTime = flappingTime;
-        rb.velocity += transform.forward * flappingPower * 5f;
+        rb.velocity += transform.forward * flappingPower * 20f;
         flapParticleSystem.Play();
     }
 
@@ -42,34 +41,51 @@ public class NoteBehaviour : MonoBehaviour
     {
         var velocity = rb.velocity;
         
+        velocity += transform.right * movement.x * sizeMovementSpeed * Time.fixedDeltaTime;
         //transform.forward * flappingPower;
 
         velocity = transform.worldToLocalMatrix * velocity;
 
-        if(isFlappingTime >= 0)
+        float flap = (maxSpeed - velocity.z) / maxSpeed;
+        if (isFlappingTime >= 0)
         {
-            velocity.z += flappingPower;
+            flap  *= flappingPower;
             isFlappingTime -= Time.fixedDeltaTime;
         }
-        else if(flapParticleSystem.isPlaying)
-            flapParticleSystem.Stop();
+        else
+        {
+            flap *= flappingPower / 30;
+            if (flapParticleSystem.isPlaying)
+                flapParticleSystem.Stop();
+        }
+        Debug.Log(flap);
+        if(flap > 0)
+            velocity.z += flap;
+
+        float angle = transform.localEulerAngles.x;
+        if (angle > 180)
+            angle -= 360;
+        if(angle > 0)
+            velocity.z += angle * Physics.gravity.y * Time.fixedDeltaTime / 180f;
 
         velocity.x -= velocity.x * airResistanceAxis.x;
-        velocity.y -= velocity.y * airResistanceAxis.y;
+        velocity.z -= velocity.y * airResistanceAxis.y / 30f;
         velocity.z -= velocity.z * airResistanceAxis.z;
+        velocity.y -= velocity.y * airResistanceAxis.y;
 
-        if (velocity.z > maxSpeed)
-            velocity.z = maxSpeed;
+        //if (velocity.z > maxSpeed)
+        //    velocity.z = maxSpeed;
 
         velocity = transform.localToWorldMatrix * velocity;
 
         rb.velocity = velocity;
+
+        //transform.position += transform.right * movement.x * sizeMovementSpeed * Time.fixedDeltaTime;
     }
 
     private void Update()
     {
         transform.localEulerAngles += new Vector3(movement.y * rotationSpeed * Time.deltaTime, 0, 0);
-        transform.position += transform.right * movement.x * sizeMovementSpeed * Time.deltaTime;
 
         var teraingHeight = WorldGenerator.Instance.GetTerrainMaxHeight();
         teraingHeight = 1 - transform.localPosition.y * 1.3f / teraingHeight;

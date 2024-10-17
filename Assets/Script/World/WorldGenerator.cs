@@ -22,6 +22,9 @@ public class WorldGenerator : MonoBehaviour
     public bool generate = false;
     public bool deleteChunks = false;
 
+    private TerrainData terrainData;
+    private Terrain lastTerrain;
+
     private float[,] chunkGroundHeight;
     private int[,,] chunkObjectParts;
     private int lastChunkId;
@@ -58,10 +61,14 @@ public class WorldGenerator : MonoBehaviour
                 if(i != chunkSizes.x)
                     chunkGroundHeight[i, j] = height;
 
+                var s0 = biom.groundHeight.Evaluate(jj - 0.05f);
+                var s1 = biom.groundHeight.Evaluate(jj + 0.05f);
+                var teta = Mathf.Atan2(s1 - s0, 0.1f);
+
                 height *= chunkSizes.y;
                 vertices.Add(new MyVector3(j, height, i));
                 uv.Add(new MyVector2(jj, ii));
-                normals.Add(Vector3.up);
+                normals.Add(new Vector3(Mathf.Sin(teta), Mathf.Cos(teta), 0).normalized);
 
                 int pos = vertices.Count - 1;
 
@@ -88,19 +95,56 @@ public class WorldGenerator : MonoBehaviour
         return mesh;
     }
 
+    private void GenerateTerain(WorldBiom biom, Vector3 positionOffset, Terrain terrain)
+    {
+        if(terrainData == null)
+        {
+            terrainData = new TerrainData();
+            terrainData.size = new Vector3(chunkSizes.z, chunkSizes.y, chunkSizes.x);
+        }
+        float[,] heighMap = new float[33, 33];
+        for (int i = 0; i <= chunkSizes.x; i++)
+        {
+            for (int j = 0; j < chunkSizes.z; j++)
+            {
+                float ii = (float)i / (chunkSizes.x - 1);
+                float jj = (float)j / (chunkSizes.z - 1);
+
+                float height = biom.groundHeight.Evaluate(jj);
+                height += Mathf.PerlinNoise((j + chunkPositionOffset.x + positionOffset.x) / 10, (i + chunkPositionOffset.y + positionOffset.z) / 10) * biom.groundHeightVariation.Evaluate(jj);
+                height = Mathf.Max(biom.minGroundHeight.Evaluate(jj), height);
+                if (i != chunkSizes.x)
+                    chunkGroundHeight[i, j] = height;
+                heighMap[(int)(ii * 32), (int)(jj * 32)] = height;
+            }
+        }
+        terrain.terrainData = terrainData;
+        terrain.SetNeighbors(null, null, null, lastTerrain);
+        lastTerrain = terrain;
+
+        terrainData.SetHeights(0, 0, heighMap);
+    }
+
     private void CreateGround(WorldBiom biom, Transform chunk)
     {
         var ground = new GameObject("ground").transform;
         ground.parent = chunk;
         ground.localPosition = Vector3.zero;
 
-        var meshRenderer = ground.gameObject.AddComponent<MeshRenderer>();
+        MeshRenderer meshRenderer;
+        MeshFilter meshFilter;
+
+        meshRenderer = ground.gameObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = chunkGroundMaterial;
-        var meshFilter = ground.gameObject.AddComponent<MeshFilter>();
+        meshFilter = ground.gameObject.AddComponent<MeshFilter>();
         meshFilter.mesh = GetGroundMesh(biom, chunk.localPosition);
         var col = ground.gameObject.AddComponent<MeshCollider>();
         col.sharedMesh = meshFilter.sharedMesh;
         col.contactOffset = 0.1f;
+
+        //var terrain = ground.gameObject.AddComponent<Terrain>();
+        //ground.gameObject.AddComponent<TerrainCollider>();
+        //GenerateTerain(biom, chunk.localPosition, terrain);
 
         var water = new GameObject("water").transform;
         water.parent = chunk;
@@ -293,6 +337,11 @@ public class WorldGenerator : MonoBehaviour
         //    else
         //        Destroy(c.gameObject);
         //}
+
+
+        terrainData = new TerrainData();
+        terrainData.size = new Vector3(chunkSizes.z, chunkSizes.y, chunkSizes.x);
+
         generate = true;
 
         chunkObjectParts = new int[chunkSizes.x, chunkSizes.y, chunkSizes.z];
